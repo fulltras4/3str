@@ -1,0 +1,56 @@
+# pricing.py
+import os
+from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime
+from dotenv import load_dotenv
+from supabase import create_client
+
+load_dotenv()
+
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_URL или SUPABASE_KEY не заданы")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+CONFIG = {
+    "markup_pct": Decimal("0.10"),
+    "margin_buffer": Decimal("0.50"),
+    "min_price": Decimal("0.99"),
+    "algorithm_version": "v1"
+}
+
+def compute_price(supplier_price: Decimal, cfg: dict) -> Decimal:
+    base = supplier_price
+    markup = (base * cfg["markup_pct"]).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    candidate = base + markup + cfg["margin_buffer"]
+    if candidate < cfg["min_price"]:
+        candidate = cfg["min_price"]
+    return candidate.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+def run_pricing():
+    resp = supabase.table('products').select('id, supplier_price, external_id').execute()
+    rows = resp.data or []
+    now = datetime.utcnow().isoformat()
+    for r in rows:
+        pid = r.get('id')
+        sp = r.get('supplier_price')
+        if sp is None:
+            print(f"Пропускаю product id={pid}: нет supplier_price")
+            continue
+        sp_dec = Decimal(str(sp))
+        price_val = compute_price(sp_dec, CONFIG)
+        rec = {
+            "product_id": pid,
+            "price": float(price_val),
+            "computed_at": now,
+            "algorithm_version": CONFIG["algorithm_version"]
+        }
+        supabase.table('prices').insert(rec).execute()
+        print(f"product_id={pid} price={price_val}")
+
+if __name__ == "__main__":
+    run_pricing()
+    print("Ценообразование выполнено.")
