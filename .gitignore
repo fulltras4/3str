@@ -1,0 +1,25 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Секретные данные
+.env
+
+# Временные файлы парсинга
+parse_progress.json
+sssports_fixed.json
+
+# Логи
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
