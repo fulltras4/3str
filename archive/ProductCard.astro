@@ -1,0 +1,78 @@
+---
+const { product } = Astro.props;
+
+// Фильтрация только европейских размеров (по диапазону и формату)
+const euroSizes = (sizes = []) => (sizes || []).filter(s => {
+  const str = String(s).trim();
+  if (/^\d+(\.\d+)?$/.test(str)) {
+    const val = parseFloat(str);
+    return val >= 35 && val <= 50;
+  }
+  if (/^\d+\s[1-3]\/3$/.test(str)) {
+    const n = parseInt(str, 10);
+    return n >= 35 && n <= 50;
+  }
+  return false;
+});
+---
+<a href={`/product/${product.id}`} class="product-card">
+  <div class="product-tile">
+    <img src={product.image_url} alt={product.title} class="product-image" />
+    <div class="product-brand">{product.brand}</div>
+    <div class="product-title">{product.title}</div>
+    <div class="product-category">{product.category}</div>
+    <div class="product-price">AED {product.price_aed}</div>
+    <div class="product-sizes">
+      Европейские размеры: {euroSizes(product.sizes).join(', ') || '—'}
+    </div>
+  </div>
+</a>
+
+<style>
+.product-card {
+  text-decoration: none;
+  color: inherit;
+}
+.product-tile {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px #0001;
+  transition: box-shadow .15s;
+}
+.product-tile:hover {
+  box-shadow: 0 4px 16px #0003;
+}
+.product-image {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border-radius: 7px;
+  background: #fafafa;
+}
+.product-brand {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #232323;
+}
+.product-title {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.product-category {
+  color: #999;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+.product-price {
+  margin: 8px 0 4px 0;
+  font-weight: bold;
+}
+.product-sizes {
+  font-size: 0.8em;
+  color: #444;
+}
+</style>

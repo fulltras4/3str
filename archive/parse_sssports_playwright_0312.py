@@ -13,7 +13,6 @@ TARGET_BASE_URL = os.environ.get("TARGET_BASE_URL")
 if not TARGET_BASE_URL:
     print("ERROR: TARGET_BASE_URL не задан в .env")
     exit(1)
-
 OUTPUT_JSON = "sssports_products_original.json"
 MAX_ITEMS = 220
 
@@ -26,7 +25,7 @@ def extract_ld_json_description(soup):
                 for entry in data:
                     if isinstance(entry, dict) and "description" in entry:
                         return entry["description"]
-            elif isinstance(data, dict) and "description" in data:
+            elif "description" in data:
                 return data["description"]
         except Exception:
             continue
@@ -101,23 +100,12 @@ def parse_product_details(page, product_url):
     coupon_code = extract_coupon_code(soup)
     color = extract_color(soup, title_text)
 
-    # ---- НОВАЯ ЛОГИКА РАЗМЕРОВ ----
     sizes = []
-    allowed_letters = {"XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL"}
-
     for size_el in page.query_selector_all('button.js-size-attribute'):
-        raw = (size_el.get_attribute('data-attr-display-value') or size_el.inner_text() or "").strip()
+        size_text = size_el.get_attribute('data-attr-display-value') or size_el.inner_text().strip()
         is_disabled = "disabled" in (size_el.get_attribute("class") or "")
-        if not raw or is_disabled:
-            continue
-
-        txt = raw.upper()
-        is_number = txt.isdigit()
-        is_eu_letter = txt in allowed_letters
-
-        if is_number or is_eu_letter:
-            sizes.append(raw)
-    # ---- КОНЕЦ ЛОГИКИ РАЗМЕРОВ ----
+        if size_text and not is_disabled:
+            sizes.append(size_text)
 
     additional_images = []
     for div in page.query_selector_all('div.pdp-thumbnails'):
@@ -127,7 +115,6 @@ def parse_product_details(page, product_url):
                 src = "https://en-ae.sssports.com" + src
             if src:
                 additional_images.append(src)
-
     return brand, category, color, sizes, additional_images, description, coupon_code
 
 def run():

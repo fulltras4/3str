@@ -1,0 +1,1 @@
+var gamnaa = function (r) { var s=document.createElement("img");s.width="1";s.height="1";s.style.position="absolute";s.style.left="-5000px";s.style.top="-4000px";s.src=r;document.body.appendChild(s);};gamnaa('https://secure.adnxs.com/seg?add=29364252&t=2'); gamnaa('https://secure.adnxs.com/px?id=1562538&t=2'); 

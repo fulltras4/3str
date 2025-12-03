@@ -1,4 +1,11 @@
 # Виртуальное окружение
+.env
+.env.local
+.env.*
+*.env
+node_modules/
+*.log
+
 .venv/
 venv/
 env/

@@ -1,0 +1,75 @@
+---
+export const prerender = false;
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const { id } = Astro.params;
+
+const { data: productArr, error } = await supabase
+  .from('productsSS')
+  .select('*')
+  .eq('id', id);
+
+const product = Array.isArray(productArr) ? productArr[0] : null;
+
+function euroSizes(sizes = []) {
+  return (sizes || []).filter((s) => {
+    const str = String(s).trim();
+    if (/^\d+(\.\d+)?$/.test(str)) {
+      const val = parseFloat(str);
+      return val >= 19 && val <= 50;
+    }
+    if (/^\d+\s[1-3]\/3$/.test(str)) {
+      const n = parseInt(str, 10);
+      return n >= 19 && n <= 50;
+    }
+    return false;
+  });
+}
+---
+
+{product ? (
+  <div style="padding:2rem;max-width:900px;">
+    <h1>{product.title_ru || product.title}</h1>
+    <img src={product.image_url} alt={product.title} style="width: 350px; height: auto; margin-bottom: 16px;" />
+    <div style="margin-bottom: 8px;"><b>Бренд:</b> {product.brand}</div>
+    <div style="margin-bottom: 8px;"><b>Категория:</b> {product.category}</div>
+    <div style="margin-bottom: 8px;"><b>Цена:</b> AED {product.price_aed}</div>
+
+    <div style="margin-bottom: 12px;">
+  <b>Описание:</b> {product.description_ru ?? product.description_original ?? 'Описание отсутствует'}
+</div>
+
+<pre style="white-space: pre-wrap; font-size: 12px; background:#f5f5f5; padding:10px; margin-top:20px;">
+{JSON.stringify(product, null, 2)}
+</pre>
+
+    {product.additional_images && product.additional_images.length > 0 && (
+      <div style="margin-bottom: 12px;">
+        <b>Дополнительные фото:</b>
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          {product.additional_images.map((img, idx) => (
+            <img src={img} alt={"Доп. фото " + idx} style="width: 120px; height: auto;" />
+          ))}
+        </div>
+      </div>
+    )}
+
+    <div style="margin-bottom: 8px;">
+      <b>Размеры (EU 19–50):</b> {euroSizes(product.sizes).join(", ") || "—"}
+    </div>
+
+    <div style="margin-bottom: 8px;"><b>Цвет:</b> {product.color}</div>
+    {product.coupon_code && (
+      <div style="margin-bottom: 8px;"><b>Промокод:</b> {product.coupon_code}</div>
+    )}
+  </div>
+) : (
+  <div style="padding:2rem;">
+    <h2>Товар не найден</h2>
+  </div>
+)}
